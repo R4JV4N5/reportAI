@@ -1,7 +1,6 @@
 import os
 from groq import Groq
 import json
-import duckdb
 import sqlparse
 import numpy as np
 import pandas as pd
@@ -77,25 +76,17 @@ def get_summarization(client, user_question, df, model):
     # Response format is set to 'None'
     return chat_with_groq(client,prompt,model,None)
 
-# Use the Llama3 70b model
-
 # Get the Groq API key and create a Groq client
 groq_api_key = os.getenv('groq_api_key')
 
-client = Groq(
-  api_key=groq_api_key
-)
-
-print("Welcome to the DuckDB Query Generator!")
-print("You can ask questions about the data in the 'employees.csv' and 'purchases.csv' files.")
-
+client = Groq(api_key=groq_api_key)
 # Load the base prompt
 with open('prompts/base_prompt.txt', 'r') as file:
   base_prompt = file.read()
 
-while True:
-  user_question = input("Ask a question: ")
-# def get_answer(user_question): 
+# while True:
+
+def get_answer(user_question): 
   if user_question:
       # Generate the full prompt for the AI
       full_prompt = base_prompt.format(user_question=user_question)
@@ -121,5 +112,5 @@ while True:
 
 
 # Get the user's question
-
+# user_question = input("Ask a question: ")
 # get_answer(user_question)
