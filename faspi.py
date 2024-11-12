@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI ,Request
 import os
 from groq import Groq
 import json
@@ -7,10 +7,21 @@ import numpy as np
 import pandas as pd
 import sqlite3
 from dotenv import load_dotenv
+import prompt_data as prd
+import modelclass as mc
+from fastapi.middleware.cors import CORSMiddleware
 
 load_dotenv()
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],  # Allows your front-end to access the back-end
+    allow_credentials=True,
+    allow_methods=["*"],  # Allow all HTTP methods (GET, POST, etc.)
+    allow_headers=["*"],  # Allow all headers
+)
 
 MODEL_NAME = "llama3-70b-8192"
 
@@ -22,6 +33,31 @@ client = Groq(api_key=groq_api_key)
 # Load the base prompt
 with open('prompts/base_prompt.txt', 'r') as file:
   base_prompt = file.read()
+
+
+def get_questions(start_date, end_date):
+  client = Groq(api_key=groq_api_key)
+
+  chat_completion = client.chat.completions.create(
+  messages=[
+        {
+            "role": "assistant",
+            "content": f"{prd.questions_prompt}",
+        },
+        {
+            "role": "user",
+            "content": f"""Based on the table columns provided— \n{prd.db_columns_info}\n —generate only 5 questions that will help in analyzing and creating a comprehensive company report dated between {start_date} and {end_date}.   
+            strictly format : (example : question1 + question2....)
+
+             Reminder !! ONLY Questions , do not generate anything else
+            """,
+        }
+    ],
+    model="llama3-8b-8192",
+    stream=False,)
+
+  return chat_completion.choices[0].message.content
+
 
 
 def chat_with_groq(client, prompt, model, response_format):
@@ -88,6 +124,7 @@ def get_summarization(client, user_question, df, model):
     return chat_with_groq(client,prompt,model,None)
 
 def get_answer(user_question): 
+  # user_question = input("Ask a question: ")
   if user_question:
       # Generate the full prompt for the AI
       full_prompt = base_prompt.format(user_question=user_question)
@@ -102,18 +139,44 @@ def get_answer(user_question):
 
           formatted_sql_query = sqlparse.format(sql_query, reindent=True, keyword_case='upper')
 
-        #   print("```sql\n" + formatted_sql_query + "\n```")
-        #   print(results_df.to_markdown(index=False))
+          # print("```sql\n" + formatted_sql_query + "\n```")
+          # print(results_df.to_markdown(index=False))
 
           summarization = get_summarization(client,user_question,results_df,MODEL_NAME)
-          print(summarization)
+          return summarization
+        
       elif 'error' in result_json:
+          
           print("ERROR:", 'Could not generate valid SQL for this question')
-          print(result_json['error'])
+          # print(result_json['error'])
 
 
 
-@app.get("/hello/{name}")
-async def hello(name):
+@app.api_route("/generate_report/", methods=["GET", "POST"], response_model=mc.ReportResponse)
+async def generate_report(request: Request):
+    data = await request.json()  # Get the JSON data from the request
     
-    return f"welcomes {name}" 
+    # Example: Access specific keys if they exist
+    start_date = data.get("start_date", None)
+    end_date = data.get("end_date", None)
+    
+    questions_string = get_questions(start_date ,end_date)
+    questions_list = questions_string.split(" + ")
+    
+    QA = {}
+    
+    for i in questions_list:
+      try:
+        answer  = get_answer(i)
+        QA[i] = answer
+      except Exception as e:
+#         # Optionally log the error message: print(f"Error: {e}")
+        continue
+        
+    return {
+        "message": "questions generated successfully",
+        "status": "success",
+        "data": {
+            "questions":QA
+        }
+    }

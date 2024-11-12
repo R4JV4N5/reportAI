@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 import sqlite3
 from dotenv import load_dotenv
-
+import prompt_data as prd
 load_dotenv()
 
 MODEL_NAME = "llama3-70b-8192"
@@ -70,7 +70,7 @@ def get_summarization(client, user_question, df, model):
       Dataframe:
       {df}
 
-    In a few sentences, summarize the data in the table as it pertains to the original user question. Avoid qualifiers like "based on the data" and do not comment on the structure or metadata of the table itself
+    In a few sentences, summarize the data in the table as it pertains to the original user question. Avoid qualifiers like "based on the data" and do not comment on the structure or metadata of the table itself , try to include numerical information too
   '''.format(user_question = user_question, df = df)
 
     # Response format is set to 'None'
@@ -85,8 +85,8 @@ with open('prompts/base_prompt.txt', 'r') as file:
   base_prompt = file.read()
 
 # while True:
-
 def get_answer(user_question): 
+  # user_question = input("Ask a question: ")
   if user_question:
       # Generate the full prompt for the AI
       full_prompt = base_prompt.format(user_question=user_question)
@@ -101,16 +101,54 @@ def get_answer(user_question):
 
           formatted_sql_query = sqlparse.format(sql_query, reindent=True, keyword_case='upper')
 
-        #   print("```sql\n" + formatted_sql_query + "\n```")
-        #   print(results_df.to_markdown(index=False))
+          # print("```sql\n" + formatted_sql_query + "\n```")
+          # print(results_df.to_markdown(index=False))
 
           summarization = get_summarization(client,user_question,results_df,MODEL_NAME)
-          print(summarization)
+          print(f"question:{user_question}\n\nAnser:{summarization}\n\n\n")
       elif 'error' in result_json:
+          
           print("ERROR:", 'Could not generate valid SQL for this question')
-          print(result_json['error'])
+          # print(result_json['error'])
 
 
-# Get the user's question
-# user_question = input("Ask a question: ")
-# get_answer(user_question)
+
+
+
+def get_questions():
+  client = Groq(api_key=groq_api_key)
+
+  chat_completion = client.chat.completions.create(
+  messages=[
+        {
+            "role": "assistant",
+            "content": f"{prd.questions_prompt}",
+        },
+        {
+            "role": "user",
+            "content": f"""Based on the table columns provided— \n{prd.db_columns_info}\n —generate only 5 questions that will help in analyzing and creating a comprehensive company report.   
+            strictly format : (example : question1 + question2....)
+
+            Reminder !! ONLY Questions , do not generate anything else
+            """,
+        }
+    ],
+    model="llama3-8b-8192",
+    stream=False,)
+
+  return chat_completion.choices[0].message.content
+
+quest = get_questions()
+
+questions_list = quest.split(" + ")
+
+for question in questions_list:
+    print(question)
+
+# for i in questions_list:
+#     try:
+#         get_answer(i)
+#     except Exception as e:
+#         # Optionally log the error message: print(f"Error: {e}")
+#         continue
+
