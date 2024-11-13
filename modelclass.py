@@ -7,4 +7,4 @@ class ReportRequest(BaseModel):
 class ReportResponse(BaseModel):
     message: str
     status: str
-    data: str
+    data: dict

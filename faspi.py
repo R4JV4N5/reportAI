@@ -256,16 +256,18 @@ async def generate_report(request: Request):
       if os.path.exists(pdf_path):
           # Open the PDF and encode it to base64
           with open(pdf_path, "rb") as pdf_file:
-              pdf_data = base64.b64encode(pdf_file.read()).decode('utf-8')        
+              pdf_data = base64.b64encode(pdf_file.read()).decode('utf-8') 
+          print('before returning 1')       
           return {
                       "message": "questions generated successfully",
                       "status": "success",
-                      "data": pdf_data
+                      "data": {"base_string":str(pdf_data)}
                   }
     else:
+      print('before returning 1')
       return {
                     "message": "questions generated successfully",
                     "status": "success",
-                    "data": "No Data"
+                    "data": {"base_string":"no data"}
                 }
       
