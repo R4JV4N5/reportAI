@@ -10,8 +10,10 @@ from dotenv import load_dotenv
 import prompt_data as prd
 import modelclass as mc
 from fastapi.middleware.cors import CORSMiddleware
-
+import base64
+import re
 load_dotenv()
+
 
 app = FastAPI()
 
@@ -23,7 +25,7 @@ app.add_middleware(
     allow_headers=["*"],  # Allow all headers
 )
 
-MODEL_NAME = "llama3-70b-8192"
+MODEL_NAME = "llama-3.1-70b-versatile"
 
 
 # Get the Groq API key and create a Groq client
@@ -34,7 +36,25 @@ client = Groq(api_key=groq_api_key)
 with open('prompts/base_prompt.txt', 'r') as file:
   base_prompt = file.read()
 
+def base_model(ast_prompt,prompt):
+  client = Groq(api_key=groq_api_key)
 
+  chat_completion = client.chat.completions.create(
+  messages=[
+        {
+            "role": "assistant",
+            "content": f"{ast_prompt} ",
+        },
+        {
+            "role": "user",
+            "content": f""" {prompt} """,
+        }
+    ],
+    model=MODEL_NAME,
+    stream=False,)
+
+  return chat_completion.choices[0].message.content
+  
 def get_questions(start_date, end_date):
   client = Groq(api_key=groq_api_key)
 
@@ -57,8 +77,6 @@ def get_questions(start_date, end_date):
     stream=False,)
 
   return chat_completion.choices[0].message.content
-
-
 
 def chat_with_groq(client, prompt, model, response_format):
   completion = client.chat.completions.create(
@@ -151,9 +169,61 @@ def get_answer(user_question):
           # print(result_json['error'])
 
 
+def extract_code(input_string):
+    # Regex to match the content between triple backticks
+    code_pattern = r'```(.*?)```'
+    
+    # Find all matches (non-greedy match to get content inside backticks)
+    code = re.findall(code_pattern, input_string, flags=re.DOTALL)
+    
+    # If code is found, remove the word 'python' (case-insensitive) from the extracted code
+    if code:
+        code = code[0]
+        # Remove the word 'python' (case-insensitive)
+        code = re.sub(r'\bpython\b', '', code, flags=re.IGNORECASE)
+    
+    # Return the cleaned code or an empty string if no code is found
+    return code if code else ""
+
+def gen_report(report_summary):
+  success = True
+  retry_count = 0
+  max_retries = 5
+
+  while success and retry_count < max_retries:  
+    error = []
+    report_code = base_model(prd.report_code_generation, prd.user_prompt.format(report_summary=report_summary,error = error))
+  
+    cde = extract_code(report_code)
+    try:
+      # print(cde)
+        exec(cde)
+        success = False
+        return 1
+         
+    except Exception as e:
+        retry_count += 1
+        print(f"Attempt {retry_count} failed with error: {e}")
+        error.append(e)
+        if retry_count >= max_retries:
+          return 0
+          
+  
+
+
+
 
 @app.api_route("/generate_report/", methods=["GET", "POST"], response_model=mc.ReportResponse)
 async def generate_report(request: Request):
+    file_path = 'report/reportai.pdf'
+
+# Check if the file exists before attempting to delete it
+    if os.path.exists(file_path):
+        os.remove(file_path)  # Delete the file
+        print(f"{file_path} has been deleted.")
+    else:
+        print(f"The file {file_path} does not exist.")
+  
     data = await request.json()  # Get the JSON data from the request
     
     # Example: Access specific keys if they exist
@@ -172,11 +242,30 @@ async def generate_report(request: Request):
       except Exception as e:
 #         # Optionally log the error message: print(f"Error: {e}")
         continue
-        
-    return {
-        "message": "questions generated successfully",
-        "status": "success",
-        "data": {
-            "questions":QA
-        }
-    }
+    qa_text = "\n".join([f"{question}: {answer}" for question, answer in QA.items()])
+
+    report_summary = base_model(prd.ast_sum_prompt,prd.report_summary_prompt.format(qa_text=qa_text))
+   
+    val = gen_report(report_summary)
+    # report_code = base_model(prd.report_code_generation)
+    
+    if val == 1:
+    
+      pdf_path = "report/reportai.pdf"
+    
+      if os.path.exists(pdf_path):
+          # Open the PDF and encode it to base64
+          with open(pdf_path, "rb") as pdf_file:
+              pdf_data = base64.b64encode(pdf_file.read()).decode('utf-8')        
+          return {
+                      "message": "questions generated successfully",
+                      "status": "success",
+                      "data": pdf_data
+                  }
+    else:
+      return {
+                    "message": "questions generated successfully",
+                    "status": "success",
+                    "data": "No Data"
+                }
+      

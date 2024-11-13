@@ -7,6 +7,7 @@ import pandas as pd
 import sqlite3
 from dotenv import load_dotenv
 import prompt_data as prd
+import re
 load_dotenv()
 
 MODEL_NAME = "llama3-70b-8192"
@@ -105,13 +106,12 @@ def get_answer(user_question):
           # print(results_df.to_markdown(index=False))
 
           summarization = get_summarization(client,user_question,results_df,MODEL_NAME)
-          print(f"question:{user_question}\n\nAnser:{summarization}\n\n\n")
+          return summarization
+        
       elif 'error' in result_json:
           
           print("ERROR:", 'Could not generate valid SQL for this question')
           # print(result_json['error'])
-
-
 
 
 
@@ -133,22 +133,98 @@ def get_questions():
             """,
         }
     ],
-    model="llama3-8b-8192",
+    model=MODEL_NAME,
     stream=False,)
 
   return chat_completion.choices[0].message.content
+
+
+
+def base_model(ast_prompt,prompt):
+  client = Groq(api_key=groq_api_key)
+
+  chat_completion = client.chat.completions.create(
+  messages=[
+        {
+            "role": "assistant",
+            "content": f"{ast_prompt}",
+        },
+        {
+            "role": "user",
+            "content": f""" {prompt} """,
+        }
+    ],
+    model=MODEL_NAME,
+    stream=False,)
+
+  return chat_completion.choices[0].message.content
+  
+
+
 
 quest = get_questions()
 
 questions_list = quest.split(" + ")
 
-for question in questions_list:
-    print(question)
-
-# for i in questions_list:
-#     try:
-#         get_answer(i)
-#     except Exception as e:
+QA = {}
+for i in questions_list:
+  try:
+    answer  = get_answer(i)
+    QA[i] = answer
+  except Exception as e:
 #         # Optionally log the error message: print(f"Error: {e}")
-#         continue
+        continue
 
+qa_text = "\n".join([f"{question}: {answer}" for question, answer in QA.items()])
+
+# Prepare the prompt
+ast_sum_prompt = "You are good at generating summaries based on question answers on financial data "
+
+
+report_summary = base_model(ast_sum_prompt,prd.report_summary_prompt.format(qa_text=qa_text))
+    
+# report_code = base_model(prd.report_code_generation , prd.user_prompt.format(report_summary=report_summary))
+
+
+def extract_code(input_string):
+    # Regex to match the content between triple backticks
+    code_pattern = r'```(.*?)```'
+    
+    # Find all matches (non-greedy match to get content inside backticks)
+    code = re.findall(code_pattern, input_string, flags=re.DOTALL)
+    
+    # If code is found, remove the word 'python' (case-insensitive) from the extracted code
+    if code:
+        code = code[0]
+        # Remove the word 'python' (case-insensitive)
+        code = re.sub(r'\bpython\b', '', code, flags=re.IGNORECASE)
+    
+    # Return the cleaned code or an empty string if no code is found
+    return code if code else ""
+
+def gen_report(report_summary):
+  success = True
+  retry_count = 0
+  max_retries = 5
+
+  while success and retry_count < max_retries:  
+    error = []
+    report_code = base_model(prd.report_code_generation, prd.user_prompt.format(report_summary=report_summary,error = error))
+  
+    cde = extract_code(report_code)
+    try:
+      # print(cde)
+        exec(cde)
+        success = False
+         
+    except Exception as e:
+        retry_count += 1
+        print(f"Attempt {retry_count} failed with error: {e}")
+        error.append(e)
+        if retry_count >= max_retries:
+            print("Max retries reached, exiting loop.")
+            break
+          
+
+
+gen_report(report_summary)
