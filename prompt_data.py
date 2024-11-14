@@ -53,8 +53,6 @@ ast_sum_prompt = "You are good at generating summaries based on question answers
 report_format = """
 
 """
-
-
 user_prompt = """
 Your output should be a complete Python script ready for execution, with comments explaining each section of the code for clarity. The script should follow best practices for coding standards and include any necessary imports or function definitions required for creating the report using ReportLab.
 

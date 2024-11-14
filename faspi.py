@@ -25,7 +25,7 @@ app.add_middleware(
     allow_headers=["*"],  # Allow all headers
 )
 
-MODEL_NAME = "llama-3.1-70b-versatile"
+MODEL_NAME = "llama3-70b-8192"
 
 
 # Get the Groq API key and create a Groq client
@@ -75,6 +75,7 @@ def get_questions(start_date, end_date):
     ],
     model="llama3-8b-8192",
     stream=False,)
+  print("genertating questions")
 
   return chat_completion.choices[0].message.content
 
@@ -137,6 +138,7 @@ def get_summarization(client, user_question, df, model):
 
     In a few sentences, summarize the data in the table as it pertains to the original user question. Avoid qualifiers like "based on the data" and do not comment on the structure or metadata of the table itself
   '''.format(user_question = user_question, df = df)
+    print("genertating sql summary")
 
     # Response format is set to 'None'
     return chat_with_groq(client,prompt,model,None)
@@ -159,6 +161,7 @@ def get_answer(user_question):
 
           # print("```sql\n" + formatted_sql_query + "\n```")
           # print(results_df.to_markdown(index=False))
+          print("genertating sql answer")
 
           summarization = get_summarization(client,user_question,results_df,MODEL_NAME)
           return summarization
@@ -186,6 +189,7 @@ def extract_code(input_string):
     return code if code else ""
 
 def gen_report(report_summary):
+  
   success = True
   retry_count = 0
   max_retries = 5
@@ -193,10 +197,10 @@ def gen_report(report_summary):
   while success and retry_count < max_retries:  
     error = []
     report_code = base_model(prd.report_code_generation, prd.user_prompt.format(report_summary=report_summary,error = error))
-  
+
     cde = extract_code(report_code)
     try:
-      # print(cde)
+        print("genertating report")
         exec(cde)
         success = False
         return 1
@@ -214,7 +218,7 @@ def gen_report(report_summary):
 
 
 @app.api_route("/generate_report/", methods=["GET", "POST"], response_model=mc.ReportResponse)
-async def generate_report(request: Request):
+async def generate_report(request: mc.ReportRequest):
     file_path = 'report/reportai.pdf'
 
 # Check if the file exists before attempting to delete it
@@ -224,50 +228,60 @@ async def generate_report(request: Request):
     else:
         print(f"The file {file_path} does not exist.")
   
-    data = await request.json()  # Get the JSON data from the request
-    
+    if(request):
     # Example: Access specific keys if they exist
-    start_date = data.get("start_date", None)
-    end_date = data.get("end_date", None)
-    
-    questions_string = get_questions(start_date ,end_date)
-    questions_list = questions_string.split(" + ")
-    
-    QA = {}
-    
-    for i in questions_list:
-      try:
-        answer  = get_answer(i)
-        QA[i] = answer
-      except Exception as e:
-#         # Optionally log the error message: print(f"Error: {e}")
-        continue
-    qa_text = "\n".join([f"{question}: {answer}" for question, answer in QA.items()])
+      start_date = request.start_date
+      end_date = request.end_date
+      
+      questions_string = get_questions(start_date ,end_date)
+      questions_list = questions_string.split(" + ")
+      
+      QA = {}
+      
+      for i in questions_list:
+        try:
+          answer  = get_answer(i)
+          QA[i] = answer
+        except Exception as e:
+  #         # Optionally log the error message: print(f"Error: {e}")
+          continue
+      qa_text = "\n".join([f"{question}: {answer}" for question, answer in QA.items()])
 
-    report_summary = base_model(prd.ast_sum_prompt,prd.report_summary_prompt.format(qa_text=qa_text))
-   
-    val = gen_report(report_summary)
+      report_summary = base_model(prd.ast_sum_prompt,prd.report_summary_prompt.format(qa_text=qa_text))
+    
+      val = gen_report(report_summary)
     # report_code = base_model(prd.report_code_generation)
     
     if val == 1:
-    
       pdf_path = "report/reportai.pdf"
     
       if os.path.exists(pdf_path):
           # Open the PDF and encode it to base64
           with open(pdf_path, "rb") as pdf_file:
+              print('in pdf base')
               pdf_data = base64.b64encode(pdf_file.read()).decode('utf-8') 
-          print('before returning 1')       
-          return {
-                      "message": "questions generated successfully",
-                      "status": "success",
-                      "data": {"base_string":str(pdf_data)}
-                  }
-    else:
-      print('before returning 1')
-      return {
-                    "message": "questions generated successfully",
-                    "status": "success",
-                    "data": {"base_string":"no data"}
-                }
+              
+          print('before returning success\n\n')       
+          return mc.ReportResponse(
+                message="report generated sucessfully",
+                status=200,
+                data={"base_string": pdf_data}
+            )
+    elif val!=1:
+      print('before returning failure \n\n')
+      return mc.ReportResponse(
+        message="error generating report",
+        status=404,
+        data={"base_string": "no data"}
+    )
       
+      
+      
+# @app.api_route("/generate_report/", methods=["GET", "POST"], response_model=mc.ReportResponse)
+# async def generate_report(request: mc.ReportRequest):
+  # print(request)
+  # return {
+  #                   "message": "questions generated successfully",
+  #                   "status": "success",
+  #                   "data": {"base_string": f"{request.end_date}"}
+  #               }
