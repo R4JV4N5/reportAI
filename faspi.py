@@ -58,6 +58,15 @@ def base_model(ast_prompt,prompt):
 def get_questions(start_date, end_date):
   client = Groq(api_key=groq_api_key)
 
+  if start_date == "" and end_date =="":
+    _model = 'llama3-8b-8192'
+    count = 3
+    suggest_questions_prompt = ""
+  else:
+     _model = 'llama3-70b-8192'
+     count=5
+     suggest_questions_prompt = "These questions should be designed to facilitate the creation of a detailed company report for the period between {start_date} and {end_date}."
+
   chat_completion = client.chat.completions.create(
   messages=[
         {
@@ -66,11 +75,17 @@ def get_questions(start_date, end_date):
         },
         {
             "role": "user",
-            "content": f"""Based on the table columns provided— \n{prd.db_columns_info}\n —generate only 5 questions that will help in analyzing and creating a comprehensive company report dated between {start_date} and {end_date}.   
-            strictly format : (example : question1 + question2....)
+            "content": """Generate a set of {count} questions based on the provided table columns information: {db_columns_info}. {suggest_questions_prompt}
+                            Format the output strictly as follows:
+                            question1 + question2 + question3 + ... + question{count}.
 
-             Reminder !! ONLY Questions , do not generate anything else
-            """,
+                            Each question should begin with a question word (e.g., What, How, When, etc.).
+                            Do not include any introductory phrases like "Here are..." or similar statements.
+
+                            Expected Output Example:
+                            What is the user's primary email address? + How many different usernames has the user had over time? + What is the last login date for this user?
+
+            """.format(count=count,db_columns_info = prd.db_columns_info,suggest_questions_prompt=suggest_questions_prompt),
         }
     ],
     model="llama3-8b-8192",
@@ -217,7 +232,7 @@ def gen_report(report_summary):
 
 
 
-@app.api_route("/generate_report/", methods=["GET", "POST"], response_model=mc.ReportResponse)
+@app.api_route("/generate_report/", methods=["POST"], response_model=mc.ReportResponse)
 async def generate_report(request: mc.ReportRequest):
     file_path = 'report/reportai.pdf'
 
@@ -232,10 +247,15 @@ async def generate_report(request: mc.ReportRequest):
     # Example: Access specific keys if they exist
       start_date = request.start_date
       end_date = request.end_date
+      qlist = request.questions_list
       
       questions_string = get_questions(start_date ,end_date)
       questions_list = questions_string.split(" + ")
       
+      if len(qlist)!=0:
+         questions_list.extend(qlist)
+         print(questions_list)
+
       QA = {}
       
       for i in questions_list:
@@ -259,23 +279,35 @@ async def generate_report(request: mc.ReportRequest):
           # Open the PDF and encode it to base64
           with open(pdf_path, "rb") as pdf_file:
               print('in pdf base')
-              pdf_data = base64.b64encode(pdf_file.read()).decode('utf-8') 
+              pdf_data = str(base64.b64encode(pdf_file.read()).decode('utf-8')) 
               
           print('before returning success\n\n')       
           return mc.ReportResponse(
                 message="report generated sucessfully",
                 status=200,
-                data={"base_string": pdf_data}
+                # data={"base_string": pdf_data}
+                data=pdf_data
             )
     elif val!=1:
       print('before returning failure \n\n')
       return mc.ReportResponse(
         message="error generating report",
         status=404,
-        data={"base_string": "no data"}
+        # data={"base_string": "no data"}
+        data="no data"
     )
       
-      
+
+@app.api_route("/suggest_questions/",methods=["GET"],response_model=mc.questionsResponse)  
+async def suggest_questions():
+  quest_string = get_questions("","")
+  questions_list = quest_string.split(" + ")
+
+  return  mc.questionsResponse(
+    message="questions generated sucessfully",
+    status=200,
+    data=questions_list
+  )
       
 # @app.api_route("/generate_report/", methods=["GET", "POST"], response_model=mc.ReportResponse)
 # async def generate_report(request: mc.ReportRequest):
