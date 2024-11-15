@@ -65,7 +65,7 @@ def get_questions(start_date, end_date):
   else:
      _model = 'llama3-70b-8192'
      count=5
-     suggest_questions_prompt = "These questions should be designed to facilitate the creation of a detailed company report for the period between {start_date} and {end_date}."
+     suggest_questions_prompt = f"These questions should be designed to facilitate the creation of a detailed company report for the period between {start_date} and {end_date}."
 
   chat_completion = client.chat.completions.create(
   messages=[
@@ -75,7 +75,18 @@ def get_questions(start_date, end_date):
         },
         {
             "role": "user",
-            "content": """Generate a set of {count} questions based on the provided table columns information: {db_columns_info}. {suggest_questions_prompt}
+            "content": """Generate a set of {count} questions based on the provided table columns information: {db_columns_info}.
+            
+            questions should be generated in such a way that it may covers these points :
+            1. Overall Financial Performance
+            2. Revenue Breakdown
+            3. Expense Analysis
+            4. Profit Margins
+            5. Cash Flow
+            6. Key Financial Ratios
+            7. Conclusion and Outlook
+            
+            {suggest_questions_prompt}
                             Format the output strictly as follows:
                             question1 + question2 + question3 + ... + question{count}.
 
@@ -114,7 +125,7 @@ def execute_sql_query(query):
     # Connect to an SQLite database (in-memory or file-based)
       # Use ':memory:' for an in-memory database or provide a filename   
     
-    conn = sqlite3.connect('Finance_database.db')
+    conn = sqlite3.connect('database/Finance_database.db')
     
     # Write the DataFrame to a new table in the SQLite database
     df.to_sql('finance_data', conn, index=False, if_exists='replace')  # Replace the table if it already exists
@@ -211,7 +222,7 @@ def gen_report(report_summary):
 
   while success and retry_count < max_retries:  
     error = []
-    report_code = base_model(prd.report_code_generation, prd.user_prompt.format(report_summary=report_summary,error = error))
+    report_code = base_model(prd.report_code_generation, prd.user_prompt.format(report_summary=report_summary,error = error,code_template = prd.code_template))
 
     cde = extract_code(report_code)
     try:
@@ -255,7 +266,7 @@ async def generate_report(request: mc.ReportRequest):
       if len(qlist)!=0:
          questions_list.extend(qlist)
          print(questions_list)
-
+      print(questions_list)
       QA = {}
       
       for i in questions_list:
