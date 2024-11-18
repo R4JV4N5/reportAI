@@ -8,7 +8,7 @@ def create_report_template(content_list, filename="report/reportai.pdf"):
     """
     # Define the document and its size
     doc = SimpleDocTemplate(filename, pagesize=letter)
-
+    doc.title = "ReportAI"
     # Styles for the report
     styles = getSampleStyleSheet()
     title_style = styles['Title']
