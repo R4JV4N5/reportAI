@@ -45,46 +45,6 @@ report_code_generation = """
 ast_sum_prompt = "You are good at generating summaries based on question answers on financial data "
 
 
-report_format = """
-
-"""
-user_prompt = """
-You are a Python code generator that creates a comprehensive financial report based on a provided summary of data.Your task is to take the following input summary and generate a Python script that will produce a well-structured report, including key financial metrics, visualizations, and interpretations.
-
-The report should contain sections for an executive summary, financial highlights, detailed analysis of revenues and expenses, graphical representations of financial growth, and a conclusion.
-
-Input Summary:
-{report_summary}
-
-"Write a Python script that accomplishes the following:
-
-Import necessary libraries such as reportlab and pandas.
-* Define variables to represent financial data, such as sales, expenses, profits, and other summary metrics.
-* Use pandas to create a DataFrame for organizing and managing the financial data.
-* Compile a structured financial report in PDF format using reportlab. Ensure the report includes sections such as:
-       Financial Summary
-       Key Metrics and Ratios
-* Add comments in the code to explain each step for better understanding.
-* Ensure the report is stakeholder-friendly, with neatly formatted tables, headings, and descriptions.
-* Prevent overlapping or overflow of content in the PDF by handling layout, spacing, and pagination properly. 
-* Ensure the content fits neatly on the page without cutting off or overcrowding."
-* Use times roman font from reportlab with the following specifications:
-       Title font size: 18
-       Heading font size: 14
-       Body text font size: 10
-Additional Notes:
-
-Include a clear table of financial data with columns like "Metric," "Value," and "Description."
-Add an introduction page summarizing the purpose of the report and a conclusion section highlighting key insights.
-
-# handle following errors : {error}
-
-you can use this template to fill specific sections based oon the summary handdle the errors above in following code:{code_template}
-
-
-
-"""
-
 code_template="""
 
 import subprocess
@@ -164,34 +124,51 @@ create_report_template()
 """
 
 
-# user_prompt = """
-# Your output should be a complete Python script ready for execution, with comments explaining each section of the code for clarity. The script should follow best practices for coding standards and include any necessary imports or function definitions required for creating the report using ReportLab.
+user_prompt = """
+Your output should be a complete Python script ready for execution, with comments explaining each section of the code for clarity. The script should follow best practices for coding standards and include any necessary imports or function definitions required for creating the report using ReportLab.
 
-# I need you to help me generate a one-page report. The report should include the following sections:
+I need you to help me generate a one-page report. The report should include the following sections:
 
-# 1. **Title**: A concise, descriptive title for the report.
-# 2. **Executive Summary**: A brief summary of the report, including key points and outcomes.
-# 3. **Introduction**: A section that introduces the purpose and scope of the report.
-# 4. **Findings/Results**: List the key findings or results from the research or project. Each finding should be numbered.
-# 5. **Conclusion/Recommendations**: Provide conclusions and actionable recommendations based on the findings.
+1. **Title**: A concise, descriptive title for the report.
+2. **Executive Summary**: A brief summary of the report, including key points and outcomes.
+3. **Introduction**: A section that introduces the purpose and scope of the report.
+4. **Findings/Results**: List the key findings or results from the research or project. Each finding should be numbered.
+5. **Conclusion/Recommendations**: Provide conclusions and actionable recommendations based on the findings.
 
-# Conclusion/Recommendations
-# Based  on  these  findings,  we  recommend  reviewing  our  sales  strategies  and  profit  margins  to
-# identify  areas  for  improvement.  Additionally,  we  should  prioritize  collecting  data  on  the  Montana
-# product to inform future business decisions.
+Conclusion/Recommendations
+Based  on  these  findings,  we  recommend  reviewing  our  sales  strategies  and  profit  margins  to
+identify  areas  for  improvement.  Additionally,  we  should  prioritize  collecting  data  on  the  Montana
+product to inform future business decisions.
 
 
-# Based on this information, please generate a structured report with clear, concise sections, and ensure the format is appropriate. ensure each section is evenly spaced and do not overlap eact other
+Based on this information, please generate a structured report with clear, concise sections, and ensure the format is appropriate. Prevent overlapping or overflow of content in the PDF by handling layout, spacing, and pagination properly. 
+savepath = 'report/'
+FILE_NAME = reportai
 
-# savepath = 'report/'
-# FILE_NAME = reportai
+use following Summary: {report_summary}
 
-# use following Summary: {report_summary}
+handle following errors : {error}
 
-# handle following errors : {error}
-
-# """
-
+"""
 
 
 
+
+# Prompts for report contents
+
+ast_report_prompt = "you are good at generating report contents from financial summaries"
+
+Overall_Financial_Performance_prompt = """Analyze the overall financial performance from the following summary \n{report_summary}\n . Include key metrics such as total sales, gross sales, and net profit. Identify how these figures have changed over time, focusing on trends by year and month. Discuss the impact of segments, countries, and discount bands on overall performance."""
+
+Revenue_Breakdown_prompt = """Break down total revenue by market segment, country, and product. For each category, calculate the total sales, gross sales, and average sales price. Identify which products or segments have contributed the most to the revenue and highlight any geographic or discount-related trends from the following summary \n{report_summary}\n"""
+
+Expense_Analysis_prompt = """Examine the costs associated with sales, including COGS (cost of goods sold) and manufacturing prices. Compare the manufacturing cost with the sale price for each product, and identify any products that are underperforming or generating lower margins. Analyze how COGS trends vary by segment, country, or product from the following summary \n{report_summary}\n."""
+
+Profit_Margins_prompt = """Evaluate the profit margins for each market segment, country, and product. Calculate the gross profit margin (profit/sales) and net profit margin (profit/gross sales) for each category. Compare these margins across different time periods (month, year) and discuss factors that have contributed to any significant changes in profitability from the following summary \n{report_summary}\n."""
+
+Key_Financial_Ratios_prompt = """Identify and analyze key financial ratios such as gross profit margin, net profit margin, and cost-to-sale ratios for different market segments, countries, and products. Compare these ratios by month or year, and discuss any areas of concern or notable improvements in financial efficiency from the following summary \n{report_summary}\n."""
+
+Conclusion_and_Outlook_prompt = """Summarize the key financial insights, focusing on overall sales, profitability, and performance by segment, country, and product. Provide an outlook for the next period, highlighting any potential risks or opportunities based on trends in sales, margins, and costs. Recommend strategic actions for improving profitability or optimizing sales efforts from the following summary \n{report_summary}\n."""
+
+
+prompt_list = [Overall_Financial_Performance_prompt,Revenue_Breakdown_prompt,Expense_Analysis_prompt,Profit_Margins_prompt,Key_Financial_Ratios_prompt,Conclusion_and_Outlook_prompt,]

@@ -1,9 +1,8 @@
-from fastapi import FastAPI ,Request
+from fastapi import FastAPI
 import os
 from groq import Groq
 import json
 import sqlparse
-import numpy as np
 import pandas as pd
 import sqlite3
 from dotenv import load_dotenv
@@ -12,6 +11,7 @@ import modelclass as mc
 from fastapi.middleware.cors import CORSMiddleware
 import base64
 import re
+from gen_report import create_report_template
 load_dotenv()
 
 
@@ -214,31 +214,42 @@ def extract_code(input_string):
     # Return the cleaned code or an empty string if no code is found
     return code if code else ""
 
+# def gen_report(report_summary):
+  
+#   success = True
+#   retry_count = 0
+#   max_retries = 5
+
+#   while success and retry_count < max_retries:  
+#     error = []
+#     report_code = base_model(prd.report_code_generation, prd.user_prompt.format(report_summary=report_summary,error = error,code_template = prd.code_template))
+
+#     cde = extract_code(report_code)
+#     try:
+#         print("genertating report")
+#         exec(cde)
+#         success = False
+#         return 1
+         
+#     except Exception as e:
+#         retry_count += 1
+#         print(f"Attempt {retry_count} failed with error: {e}")
+#         error.append(e)
+#         if retry_count >= max_retries:
+#           return 0
+          
 def gen_report(report_summary):
   
-  success = True
-  retry_count = 0
-  max_retries = 5
-
-  while success and retry_count < max_retries:  
-    error = []
-    report_code = base_model(prd.report_code_generation, prd.user_prompt.format(report_summary=report_summary,error = error,code_template = prd.code_template))
-
-    cde = extract_code(report_code)
-    try:
-        print("genertating report")
-        exec(cde)
-        success = False
-        return 1
-         
-    except Exception as e:
-        retry_count += 1
-        print(f"Attempt {retry_count} failed with error: {e}")
-        error.append(e)
-        if retry_count >= max_retries:
-          return 0
-          
-  
+  report_contents = []
+  for i in prd.prompt_list:
+    contents_output = base_model(prd.ast_report_prompt, f"{i.format(report_summary=report_summary)} in 40 words.Generate without any introductory phrases or contextual framing such as 'Here is an analysis of the overall financial performance.It must be stakeholders friendly. it should not include special symbols like * .Generate a concise and accurate response")
+    report_contents.append(contents_output)
+    
+  if len(report_contents) == 6:
+    create_report_template(report_contents)
+    return True 
+  else:
+    return False     
 
 
 
@@ -283,7 +294,7 @@ async def generate_report(request: mc.ReportRequest):
       val = gen_report(report_summary)
     # report_code = base_model(prd.report_code_generation)
     
-    if val == 1:
+    if val == True:
       pdf_path = "report/reportai.pdf"
     
       if os.path.exists(pdf_path):
@@ -299,7 +310,7 @@ async def generate_report(request: mc.ReportRequest):
                 # data={"base_string": pdf_data}
                 data=pdf_data
             )
-    elif val!=1:
+    elif val == False:
       print('before returning failure \n\n')
       return mc.ReportResponse(
         message="error generating report",
