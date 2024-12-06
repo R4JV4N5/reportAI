@@ -1,21 +1,64 @@
 db_columns_info = '''
-segment (VARCHAR): Indicates the market segment ('Government', 'Midmarket', 'Channel Partners', 'Enterprise',
-       'Small Business'), useful for analyzing performance based on the type of client.
-country (VARCHAR): Represents the country where the sale occurred, important for geographic sales analysis.
-product (VARCHAR): Specifies the product sold, in this case, Carretera','Montana','Paseo','Velo ','VTT','Amarilla', which helps in tracking product-specific sales performance.
-discount_band (VARCHAR): Shows the discount band applied to the product (if any), useful for analyzing the impact of discounts on sales.
-units_sold (FLOAT): Represents the number of units sold, useful for tracking sales volume.
-manufacturing_price (FLOAT): Indicates the price to produce one unit of the product, critical for cost and profit analysis.
-sale_price (FLOAT): The price at which the product was sold, essential for calculating gross revenue and profit margins.
-gross_sales (FLOAT): The total revenue before any discounts, representing overall sales value.
-discounts (FLOAT): The total discount amount, useful for assessing the impact of discounts on gross revenue.
-sales (FLOAT): The actual sales amount after applying any discounts, used for understanding net revenue.
-cogs (FLOAT): The cost of goods sold, critical for calculating profitability and assessing the efficiency of sales.
-profit (FLOAT): The net profit, calculated as sales minus COGS, showing the actual profitability of each sale.
-date (DATE): The date the sale occurred, useful for time-based analysis and trends.
-month_number (INTEGER): The numerical representation of the month, aiding in month-wise analysis.
-month_name (VARCHAR): The name of the month, useful for reporting and visualizing data trends across months.
-year (INTEGER): The year of the sale,in this case(2013,2014) useful for analyzing performance over time.
+1. University (VARCHAR):
+   - Description: Represents the name of the university offering the course. This is used to identify the institution within the data.
+   - Unique Values: ['JAIN (DEEMED-TO-BE UNIVERSITY)']
+
+2. UniversityCode (VARCHAR):
+   - Description: The code representing the university.
+
+3. Batch (VARCHAR):
+   - Description: Indicates the batch or cohort in which a student is enrolled, with details like start date and course duration.
+   - Unique Values: ['July 2020 - 3 Years', 'July 2020 - 2 Years', 'July 2019 - 2 Years', 'July 2019 - 3 Years', 'WorkX - 2020', 
+                      'July 2020 - 1 Year', 'Jan 2020 - 2 Years', 'Jan 2019 - 2 Years', 'Jan 2021 -3 Years', 'Jan 2021 - 2 Year', 
+                      'Jan 2020 - 3 Years', 'July 2021 - 2 Years', 'July 2019 - 1 Year', 'July 2021 - 3 Years', 'Jan 2019 - 3 Years', 
+                      'Jan 2022 - 2 Years', 'Jan 2022 - 3 Years']
+
+4. Course (VARCHAR):
+   - Description: Indicates the name of the course a student is enrolled in.
+   - Unique Values: ['Bachelor of Science', 'Bachelor of Business Administration', 'Master of Science Psychology', 
+                     'Master of Commerce', 'Bachelor of Arts', 'Bachelor of Commerce', 'Bachelors in Computer Application', 
+                     'WorkX Diploma Program', 'Post Graduate Diploma Program in Banking & Finance Management', 
+                     'MA in Economics', 'Bachelor of Business Administration with Apprenticeship', 
+                     'Master of Science (Psychology) with Apprenticeship', 'Bachelor of Arts with Apprenticeship', 
+                     'Post Graduate Diploma Program in Human Resource Management', 'Post Graduate Diploma Program in Finance Management',
+                     'Master of Commerce with Apprenticeship', 'Bachelor of Commerce with Apprenticeship', 
+                     'MA in Economics with Apprenticeship', 'Post Graduate Diploma Program in Information Technology', 
+                     'M.A. (English)']
+
+5. Semester (VARCHAR):
+   - Description: Denotes the semester within the academic year.
+   - Unique Values: ['Semester 1', 'Semester 3', 'Registration', 'Semester 5']
+
+6. InstallmentNo (INTEGER):
+   - Description: Represents the installment number for payment.
+
+7. EnrollmentNo (VARCHAR):
+   - Description: The unique identifier for each student’s enrollment.
+
+8. Name (VARCHAR):
+   - Description: The name of the student.
+
+9. PaymentId (INTEGER):
+   - Description: The unique identifier for each payment made.
+
+10. Amount (FLOAT):
+    - Description: The total payment amount made by the student.
+
+11. Mode (VARCHAR):
+    - Description: The mode of payment used by the student, such as online payment or demand draft.
+    - Unique Values: ['Net Banking', 'DD']
+
+12. Provider (VARCHAR):
+    - Description: The payment service provider used to process the payment.
+    - Unique Values: ['ATOM TECHNOLOGIES LTD.', 'CITRUS PAYMENT SOLUTIONS PVT. LTD.', 'AGGREPAY', 'CCAvenue']
+
+13. Status (VARCHAR):
+    - Description: The status of the payment.
+    - Unique Values: ['C']
+
+14. PaidOn (VARCHAR):
+    - Description: The date when the payment was made.
+
 '''
 
 questions_prompt = """
@@ -24,10 +67,14 @@ You do not include any introductory phrases like "Here are..." or similar statem
 
 Categorization: Organize questions into these categories:
 
-Performance Analysis (e.g., "How has revenue changed over recent quarters?")
-Comparisons (e.g., "What are the profit margin differences across product lines?")
-Future Projections (e.g., "What is the projected revenue based on current growth rates?")
-Clarity and Precision:MAKE SURE QUESTIONS ARE CLEAR, specific, and directly related to the data.
+Performance Analysis:
+"How have payment amounts changed across different batches and courses over time?"
+
+Comparisons:
+"What are the differences in payment amounts across various payment modes (Net Banking vs. DD)?"
+
+Future Projections:
+"What is the projected revenue based on current installment payment trends?"
 
 Output: Provide 5 insightful questions in a strictly " + " separated format to guide report generation.
 Do not generate anything else
@@ -158,17 +205,25 @@ handle following errors : {error}
 
 ast_report_prompt = "you are good at generating report contents from financial summaries"
 
-Overall_Financial_Performance_prompt = """Analyze the overall financial performance from the following summary \n{report_summary}\n . Include key metrics such as total sales, gross sales, and net profit. Identify how these figures have changed over time, focusing on trends by year and month. Discuss the impact of segments, countries, and discount bands on overall performance."""
+Payment_Performance_prompt = """Analyze the overall payment performance from the following summary \n{report_summary}\n. Include key metrics such as total payment amount, number of payments, and payment trends over time. Identify how these figures have changed across different time periods (year, month). Discuss the impact of different market segments, countries, and products on payment performance."""
 
-Revenue_Breakdown_prompt = """Break down total revenue by market segment, country, and product. For each category, calculate the total sales, gross sales, and average sales price. Identify which products or segments have contributed the most to the revenue and highlight any geographic or discount-related trends from the following summary \n{report_summary}\n"""
+Payment_Trends_by_Batch_and_Course_prompt = """Examine the payment trends by batch and course from the following summary \n{report_summary}\n. Break down the payment amounts and number of payments for each batch and course. Identify which batches or courses have the highest payment volumes and whether any specific trends or anomalies exist across different periods."""
 
-Expense_Analysis_prompt = """Examine the costs associated with sales, including COGS (cost of goods sold) and manufacturing prices. Compare the manufacturing cost with the sale price for each product, and identify any products that are underperforming or generating lower margins. Analyze how COGS trends vary by segment, country, or product from the following summary \n{report_summary}\n."""
+Payment_Mode_Comparison_prompt = """Compare the payment amounts and payment volumes across different payment modes (e.g., Net Banking, DD) from the following summary \n{report_summary}\n. Analyze the contribution of each payment mode to total revenue and identify any trends or shifts in preference for payment methods over time."""
 
-Profit_Margins_prompt = """Evaluate the profit margins for each market segment, country, and product. Calculate the gross profit margin (profit/sales) and net profit margin (profit/gross sales) for each category. Compare these margins across different time periods (month, year) and discuss factors that have contributed to any significant changes in profitability from the following summary \n{report_summary}\n."""
+Installment_Analysis_prompt = """Analyze the payment data related to installments from the following summary \n{report_summary}\n. Examine the number of installment payments, total installment amount, and frequency of installment payments. Identify trends in installment usage and any correlations with specific batches, courses, or payment modes."""
 
-Key_Financial_Ratios_prompt = """Identify and analyze key financial ratios such as gross profit margin, net profit margin, and cost-to-sale ratios for different market segments, countries, and products. Compare these ratios by month or year, and discuss any areas of concern or notable improvements in financial efficiency from the following summary \n{report_summary}\n."""
+Revenue_Projections_prompt = """Provide projections for future revenue based on current payment trends from the following summary \n{report_summary}\n. Analyze historical payment data to estimate future payment volumes and total revenue. Include considerations for changes in market segments, countries, payment modes, and other key factors that may influence revenue growth."""
 
-Conclusion_and_Outlook_prompt = """Summarize the key financial insights, focusing on overall sales, profitability, and performance by segment, country, and product. Provide an outlook for the next period, highlighting any potential risks or opportunities based on trends in sales, margins, and costs. Recommend strategic actions for improving profitability or optimizing sales efforts from the following summary \n{report_summary}\n."""
+Semester_Payment_Overview_prompt = """Summarize the payment performance by semester from the following summary \n{report_summary}\n. Break down the payment amounts and trends across different semesters. Identify which semesters have seen the highest or lowest payment volumes and analyze any trends or patterns in payment behavior by semester."""
+
+Conclusion_and_Outlook_prompt = """Summarize the key payment performance insights from the following summary \n{report_summary}\n. Focus on payment volumes, trends by batch and course, and payment modes. Provide an outlook for the next period, highlighting any potential risks or opportunities based on current payment trends. Recommend strategies to optimize payment collection and improve revenue generation."""
 
 
-prompt_list = [Overall_Financial_Performance_prompt,Revenue_Breakdown_prompt,Expense_Analysis_prompt,Profit_Margins_prompt,Key_Financial_Ratios_prompt,Conclusion_and_Outlook_prompt,]
+
+prompt_list = [Payment_Performance_prompt,Payment_Trends_by_Batch_and_Course_prompt,Payment_Mode_Comparison_prompt,Installment_Analysis_prompt,Revenue_Projections_prompt,Semester_Payment_Overview_prompt,Conclusion_and_Outlook_prompt]
+
+
+
+
+

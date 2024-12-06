@@ -59,13 +59,13 @@ def get_questions(start_date, end_date):
   client = Groq(api_key=groq_api_key)
 
   if start_date == "" and end_date =="":
-    _model = 'llama3-8b-8192'
+    _model = 'llama3-70b-8192'
     count = 3
     suggest_questions_prompt = ""
   else:
      _model = 'llama3-70b-8192'
      count=5
-     suggest_questions_prompt = f"These questions should be designed to facilitate the creation of a detailed company report for the period between {start_date} and {end_date}."
+     suggest_questions_prompt = f"These questions should be designed to facilitate the creation of a detailed report for the period between {start_date} and {end_date}."
 
   chat_completion = client.chat.completions.create(
   messages=[
@@ -78,14 +78,13 @@ def get_questions(start_date, end_date):
             "content": """Generate a set of {count} questions based on the provided table columns information: {db_columns_info}.
             
             questions should be generated in such a way that it may covers these points :
-            1. Overall Financial Performance
-            2. Revenue Breakdown
-            3. Expense Analysis
-            4. Profit Margins
-            5. Cash Flow
-            6. Key Financial Ratios
-            7. Conclusion and Outlook
-            
+          1.Overall Payment Performance
+          2.Payment Trends Across Batches and Courses
+          3.Comparison of Payment Modes
+          4.Installment Payment Analysis
+          5.Revenue Projections Based on Payment Trends
+          6.Semester-Wise Payment Overview
+          7.Conclusion and Future Outlook
             {suggest_questions_prompt}
                             Format the output strictly as follows:
                             question1 + question2 + question3 + ... + question{count}.
@@ -99,7 +98,7 @@ def get_questions(start_date, end_date):
             """.format(count=count,db_columns_info = prd.db_columns_info,suggest_questions_prompt=suggest_questions_prompt),
         }
     ],
-    model="llama3-8b-8192",
+    model="llama3-70b-8192",
     stream=False,)
   print("genertating questions")
 
@@ -120,15 +119,15 @@ def chat_with_groq(client, prompt, model, response_format):
   return completion.choices[0].message.content
 
 def execute_sql_query(query):
-    df = pd.read_csv('data/Financials.csv')
+    df = pd.read_csv('data/jain_university_data.csv')
 
     # Connect to an SQLite database (in-memory or file-based)
       # Use ':memory:' for an in-memory database or provide a filename   
     
-    conn = sqlite3.connect('database/Finance_database.db')
+    conn = sqlite3.connect('database/temp_database.db')
     
     # Write the DataFrame to a new table in the SQLite database
-    df.to_sql('finance_data', conn, index=False, if_exists='replace')  # Replace the table if it already exists
+    df.to_sql('university_data', conn, index=False, if_exists='replace')  # Replace the table if it already exists
 
     # Execute the query and fetch the result
     query_result = pd.read_sql(query, conn)

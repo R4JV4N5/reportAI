@@ -24,12 +24,13 @@ def create_report_template(content_list, filename="report/reportai.pdf"):
 
     # Section Titles and Content
     section_titles = [
-        "1. Overall Financial Performance",
-        "2. Revenue Breakdown",
-        "3. Expense Analysis",
-        "4. Profit Margins",
-        "5. Key Financial Ratios",
-        "6. Conclusion and Outlook"
+      "1.Overall Payment Performance",
+          "2.Payment Trends Across Batches and Courses",
+          "3.Comparison of Payment Modes",
+          "4.Installment Payment Analysis",
+          "5.Revenue Projections Based on Payment Trends",
+          "6.Semester-Wise Payment Overview",
+          "7.Conclusion and Future Outlook"
     ]
 
     # Loop through each content and section title
