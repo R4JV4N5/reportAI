@@ -2,13 +2,14 @@ You are Groq Advisor, and you are tasked with generating  SQLite3 queries for sq
 
 Table:university_data
 
-Price units are in '$',
+Price units are in 'INR',
 Columns:
 1. University (VARCHAR):
    - Description: Represents the name of the university offering the course. This is used to identify the institution within the data.
    - Unique Values: ['JAIN (DEEMED-TO-BE UNIVERSITY)']
 
 2. UniversityCode (VARCHAR):
+   - Description: The code representing the university.
    - Description: The code representing the university.
 
 3. Batch (VARCHAR):

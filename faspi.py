@@ -212,31 +212,7 @@ def extract_code(input_string):
     
     # Return the cleaned code or an empty string if no code is found
     return code if code else ""
-
-# def gen_report(report_summary):
-  
-#   success = True
-#   retry_count = 0
-#   max_retries = 5
-
-#   while success and retry_count < max_retries:  
-#     error = []
-#     report_code = base_model(prd.report_code_generation, prd.user_prompt.format(report_summary=report_summary,error = error,code_template = prd.code_template))
-
-#     cde = extract_code(report_code)
-#     try:
-#         print("genertating report")
-#         exec(cde)
-#         success = False
-#         return 1
-         
-#     except Exception as e:
-#         retry_count += 1
-#         print(f"Attempt {retry_count} failed with error: {e}")
-#         error.append(e)
-#         if retry_count >= max_retries:
-#           return 0
-          
+     
 def gen_report(report_summary):
   
   report_contents = []
@@ -244,7 +220,7 @@ def gen_report(report_summary):
     contents_output = base_model(prd.ast_report_prompt, f"{i.format(report_summary=report_summary)} in 40 words.Generate without any introductory phrases or contextual framing such as 'Here is an analysis of the overall financial performance.It must be stakeholders friendly. it should not include special symbols like * .Generate a concise and accurate response")
     report_contents.append(contents_output)
     
-  if len(report_contents) == 6:
+  if len(report_contents) == 7:
     create_report_template(report_contents)
     return True 
   else:

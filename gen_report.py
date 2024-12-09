@@ -1,14 +1,20 @@
 from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet
+import os
 
 def create_report_template(content_list, filename="report/reportai.pdf"):
     """
     Create a report with multiple sections and wrap text properly using SimpleDocTemplate.
     """
+    # Check if the file exists, and create the directory if needed
+    if not os.path.exists(filename):
+        os.makedirs(os.path.dirname(filename), exist_ok=True)  # Create directory if it doesn't exist
+
     # Define the document and its size
     doc = SimpleDocTemplate(filename, pagesize=letter)
     doc.title = "ReportAI"
+
     # Styles for the report
     styles = getSampleStyleSheet()
     title_style = styles['Title']
@@ -24,13 +30,13 @@ def create_report_template(content_list, filename="report/reportai.pdf"):
 
     # Section Titles and Content
     section_titles = [
-      "1.Overall Payment Performance",
-          "2.Payment Trends Across Batches and Courses",
-          "3.Comparison of Payment Modes",
-          "4.Installment Payment Analysis",
-          "5.Revenue Projections Based on Payment Trends",
-          "6.Semester-Wise Payment Overview",
-          "7.Conclusion and Future Outlook"
+        "1.Overall Payment Performance",
+        "2.Payment Trends Across Batches and Courses",
+        "3.Comparison of Payment Modes",
+        "4.Installment Payment Analysis",
+        "5.Revenue Projections Based on Payment Trends",
+        "6.Semester-Wise Payment Overview",
+        "7.Conclusion and Future Outlook"
     ]
 
     # Loop through each content and section title
@@ -47,56 +53,3 @@ def create_report_template(content_list, filename="report/reportai.pdf"):
     # Build the document
     doc.build(story)
 
-# Content for each section
-# content_list = [
-#     """Government segment led sales with $56.4 million, followed by Small Business ($45.9 million),
-# Enterprise ($21.1 million), Midmarket ($2.6 million), and Channel Partners ($1.9 million).
-# Total Cost of Goods Sold (COGS) reached $101,832,648.
-# Unable to determine overall net revenue due to unavailability of data.
-# Outlook: Focus on growing Government and Small Business segments, optimizing COGS, and potentially exploring opportunities in Enterprise and Midmarket.
-# Risks: Increasing COGS, stagnating sales in slower-growing segments.
-# Recommendations: Analyze Government and Small Business customer needs, optimize supply chain to reduce COGS, and explore strategic partnerships in Enterprise and Midmarket""",
-    
-#     """Government segment led sales with $56.4 million, followed by Small Business ($45.9 million),
-# Enterprise ($21.1 million), Midmarket ($2.6 million), and Channel Partners ($1.9 million).
-# Total Cost of Goods Sold (COGS) reached $101,832,648.
-# Unable to determine overall net revenue due to unavailability of data.
-# Outlook: Focus on growing Government and Small Business segments, optimizing COGS, and potentially exploring opportunities in Enterprise and Midmarket.
-# Risks: Increasing COGS, stagnating sales in slower-growing segments.
-# Recommendations: Analyze Government and Small Business customer needs, optimize supply chain to reduce COGS, and explore strategic partnerships in Enterprise and Midmarket""",
-    
-#     """Government segment led sales with $56.4 million, followed by Small Business ($45.9 million),
-# Enterprise ($21.1 million), Midmarket ($2.6 million), and Channel Partners ($1.9 million).
-# Total Cost of Goods Sold (COGS) reached $101,832,648.
-# Unable to determine overall net revenue due to unavailability of data.
-# Outlook: Focus on growing Government and Small Business segments, optimizing COGS, and potentially exploring opportunities in Enterprise and Midmarket.
-# Risks: Increasing COGS, stagnating sales in slower-growing segments.
-# Recommendations: Analyze Government and Small Business customer needs, optimize supply chain to reduce COGS, and explore strategic partnerships in Enterprise and Midmarket""",
-    
-#     """Government segment led sales with $56.4 million, followed by Small Business ($45.9 million),
-# Enterprise ($21.1 million), Midmarket ($2.6 million), and Channel Partners ($1.9 million).
-# Total Cost of Goods Sold (COGS) reached $101,832,648.
-# Unable to determine overall net revenue due to unavailability of data.
-# Outlook: Focus on growing Government and Small Business segments, optimizing COGS, and potentially exploring opportunities in Enterprise and Midmarket.
-# Risks: Increasing COGS, stagnating sales in slower-growing segments.
-# Recommendations: Analyze Government and Small Business customer needs, optimize supply chain to reduce COGS, and explore strategic partnerships in Enterprise and Midmarket""",
-    
-#     """Government segment led sales with $56.4 million, followed by Small Business ($45.9 million),
-# Enterprise ($21.1 million), Midmarket ($2.6 million), and Channel Partners ($1.9 million).
-# Total Cost of Goods Sold (COGS) reached $101,832,648.
-# Unable to determine overall net revenue due to unavailability of data.
-# Outlook: Focus on growing Government and Small Business segments, optimizing COGS, and potentially exploring opportunities in Enterprise and Midmarket.
-# Risks: Increasing COGS, stagnating sales in slower-growing segments.
-# Recommendations: Analyze Government and Small Business customer needs, optimize supply chain to reduce COGS, and explore strategic partnerships in Enterprise and Midmarket""",
-    
-#     """Government segment led sales with $56.4 million, followed by Small Business ($45.9 million),
-# Enterprise ($21.1 million), Midmarket ($2.6 million), and Channel Partners ($1.9 million).
-# Total Cost of Goods Sold (COGS) reached $101,832,648.
-# Unable to determine overall net revenue due to unavailability of data.
-# Outlook: Focus on growing Government and Small Business segments, optimizing COGS, and potentially exploring opportunities in Enterprise and Midmarket.
-# Risks: Increasing COGS, stagnating sales in slower-growing segments.
-# Recommendations: Analyze Government and Small Business customer needs, optimize supply chain to reduce COGS, and explore strategic partnerships in Enterprise and Midmarket"""
-# ]
-
-# # Call the function to generate the report
-# create_report_template(content_list)
