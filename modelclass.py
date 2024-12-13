@@ -9,7 +9,7 @@ class ReportRequest(BaseModel):
 class ReportResponse(BaseModel):
     message: str
     status: int
-    data: str 
+    data: list 
 
 class questionsResponse(BaseModel):
     message: str

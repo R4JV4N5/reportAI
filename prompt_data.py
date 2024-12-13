@@ -1,4 +1,8 @@
 db_columns_info = '''
+Table:university_data
+
+Price units are in 'INR',
+
 1. University (VARCHAR):
    - Description: Represents the name of the university offering the course. This is used to identify the institution within the data.
    - Unique Values: ['JAIN (DEEMED-TO-BE UNIVERSITY)']
@@ -90,113 +94,6 @@ report_code_generation = """
 """
 
 ast_sum_prompt = "You are good at generating summaries based on question answers on financial data "
-
-
-code_template="""
-
-import subprocess
-import sys
-
-subprocess.check_call([sys.executable, "-m", "pip", "install -q", "reportlab"])
-
-# Ensure proper imports from reportlab
-from reportlab.lib.pagesizes import letter
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
-from reportlab.lib.styles import getSampleStyleSheet
-from reportlab.lib import colors
-
-def create_report_template(filename="report/reportai.pdf"):
-    # Create the PDF document
-    pdf = SimpleDocTemplate(filename, pagesize=letter)
-    styles = getSampleStyleSheet()
-
-    # Define styles
-    title_style = styles['Title']
-    heading_style = styles['Heading2']
-    body_style = styles['BodyText']
-
-    # Content elements
-    elements = []
-
-    # Title
-    elements.append(Paragraph("Financial Report", title_style))
-    elements.append(Spacer(1, 20))
-
-    # Section 1: Overall Financial Performance
-    elements.append(Paragraph("1. Overall Financial Performance", heading_style))
-    elements.append(Paragraph("<Insert summary of overall financial performance here>", body_style))
-    elements.append(Spacer(1, 12))
-
-    # Section 2: Revenue Breakdown
-    elements.append(Paragraph("2. Revenue Breakdown", heading_style))
-    # Placeholder for a table or chart
-    elements.append(Paragraph("<Insert revenue breakdown table or chart here>", body_style))
-    elements.append(Spacer(1, 12))
-
-    # Section 3: Expense Analysis
-    elements.append(Paragraph("3. Expense Analysis", heading_style))
-    # Placeholder for a table or chart
-    elements.append(Paragraph("<Insert expense analysis table or chart here>", body_style))
-    elements.append(Spacer(1, 12))
-
-    # Section 4: Profit Margins
-    elements.append(Paragraph("4. Profit Margins", heading_style))
-    elements.append(Paragraph("<Insert gross margin and net profit margin details here>", body_style))
-    elements.append(Spacer(1, 12))
-
-    # Section 5: Cash Flow
-    elements.append(Paragraph("5. Cash Flow", heading_style))
-    elements.append(Paragraph("<Insert cash flow details and analysis here>", body_style))
-    elements.append(Spacer(1, 12))
-
-    # Section 6: Key Financial Ratios
-    elements.append(Paragraph("6. Key Financial Ratios", heading_style))
-    # Placeholder for a table or chart
-    elements.append(Paragraph("<Insert financial ratios table or details here>", body_style))
-    elements.append(Spacer(1, 12))
-
-    # Section 7: Conclusion and Outlook
-    elements.append(Paragraph("7. Conclusion and Outlook", heading_style))
-    elements.append(Paragraph("<Insert summary of financial position and future outlook here>", body_style))
-    elements.append(Spacer(1, 12))
-
-    # Build the PDF
-    pdf.build(elements)
-
-# Call the function to generate the template
-create_report_template()
-
-
-
-"""
-
-
-user_prompt = """
-Your output should be a complete Python script ready for execution, with comments explaining each section of the code for clarity. The script should follow best practices for coding standards and include any necessary imports or function definitions required for creating the report using ReportLab.
-
-I need you to help me generate a one-page report. The report should include the following sections:
-
-1. **Title**: A concise, descriptive title for the report.
-2. **Executive Summary**: A brief summary of the report, including key points and outcomes.
-3. **Introduction**: A section that introduces the purpose and scope of the report.
-4. **Findings/Results**: List the key findings or results from the research or project. Each finding should be numbered.
-5. **Conclusion/Recommendations**: Provide conclusions and actionable recommendations based on the findings.
-
-Conclusion/Recommendations
-Based  on  these  findings,  we  recommend  reviewing  our  sales  strategies  and  profit  margins  to
-identify  areas  for  improvement.  Additionally,  we  should  prioritize  collecting  data  on  the  Montana
-product to inform future business decisions.
-
-
-Based on this information, please generate a structured report with clear, concise sections, and ensure the format is appropriate. Prevent overlapping or overflow of content in the PDF by handling layout, spacing, and pagination properly. 
-savepath = 'report/'
-FILE_NAME = reportai
-
-use following Summary: {report_summary}
-
-handle following errors : {error}
-
-"""
 
 
 
