@@ -39,7 +39,7 @@ async def generate_report(request: mc.ReportRequest):
     # Example: Access specific keys if they exist
       start_date = request.start_date
       end_date = request.end_date
-      qlist = request.questions_list
+      
       
       quest_object = get_questions(start_date,end_date)
       

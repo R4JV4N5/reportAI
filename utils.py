@@ -144,7 +144,7 @@ def get_summarization(client, user_question, df, model):
       {df}
 
     In a few sentences, summarize the data in the table as it pertains to the original user question. Avoid qualifiers like "based on the data" and do not comment on the structure or metadata of the table itself in 50 words.
-    Avoid using special Characters . use indian currency
+    Avoid using special Characters . Use units in amounts like 12000 rupees or 10 cr or 1 lakhs
   '''.format(user_question = user_question, df = df)
     print("genertating sql summary")
 
