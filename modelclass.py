@@ -14,4 +14,4 @@ class ReportResponse(BaseModel):
 class questionsResponse(BaseModel):
     message: str
     status: int
-    data: list[str]
+    data: list[str] | list[dict]

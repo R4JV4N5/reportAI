@@ -7,7 +7,7 @@ import pandas as pd
 import os
 import prompt_data as prd
 import re
-
+from db import engine
 
 
 from dotenv import load_dotenv
@@ -83,23 +83,8 @@ def chat_with_groq(client, prompt, model, response_format):
 
 def execute_sql_query(query):
   
-  
-    # df = pd.read_csv('data/jain_university_data.csv')
-    df = pd.read_csv('data/university_payment_data.csv')
-
-    # Connect to an SQLite database (in-memory or file-based)
-      # Use ':memory:' for an in-memory database or provide a filename   
-    
-    conn = sqlite3.connect('database/temp_database.db')
-    
     # Write the DataFrame to a new table in the SQLite database
-    df.to_sql('university_data', conn, index=False, if_exists='replace')  # Replace the table if it already exists
-
-    # Execute the query and fetch the result
-    query_result = pd.read_sql(query, conn)
-
-    # Close the connection
-    conn.close()
+    query_result = pd.read_sql(query, engine)
 
     return query_result
 
@@ -138,13 +123,7 @@ def get_summarization(client, user_question, df, model):
 def get_answer(question_json): 
   # user_question = input("Ask a question: ")
   if question_json:
-      # Generate the full prompt for the AI
-      # full_prompt = base_prompt.format(user_question=user_question)
 
-      # Get the AI's response. Call with '{"type": "json_object"}' to use JSON mode
-      # llm_response = chat_with_groq(client, full_prompt, MODEL_NAME, {"type": "json_object"})
-
-      
       if 'sql_query' in question_json:
           question = question_json['question']
           sql_query = question_json['sql_query']

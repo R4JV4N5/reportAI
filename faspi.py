@@ -5,6 +5,7 @@ import modelclass as mc
 from fastapi.middleware.cors import CORSMiddleware
 import base64
 import re
+import json
 
 from utils import get_questions,get_answer,base_model
 
@@ -80,11 +81,12 @@ async def generate_report(request: mc.ReportRequest):
 async def suggest_questions():
   quest_string = base_model()
   # questions_list = quest_string.split(" + ")
+  question_list = json.loads(quest_string)
   print(quest_string)
   return  mc.questionsResponse(
     message="questions generated sucessfully",
     status=200,
-    data=['done']
+    data=question_list
   )
       
 # @app.api_route("/generate_report/", methods=["GET", "POST"], response_model=mc.ReportResponse)
