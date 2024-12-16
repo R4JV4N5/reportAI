@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import base64
 import re
 
-from utils import get_questions,get_answer,base_model,gen_report
+from utils import get_questions,get_answer,base_model
 
 
 
@@ -39,9 +39,10 @@ async def generate_report(request: mc.ReportRequest):
     # Example: Access specific keys if they exist
       start_date = request.start_date
       end_date = request.end_date
+      qlist = request.qlist
       
       
-      quest_object = get_questions(start_date,end_date)
+      quest_object = get_questions(start_date,end_date,qlist)
       
       final_object = []
       
@@ -58,8 +59,8 @@ async def generate_report(request: mc.ReportRequest):
                 # data={"base_string": pdf_data}
                 data="No questions"
                   )
-      if len(final_object) ==7:
-        
+      if len(final_object) > 0:
+        print(f'\n\n\n{final_object}')
         return mc.ReportResponse(
                 message="output generated succesfully",
                 status=200,
@@ -77,13 +78,13 @@ async def generate_report(request: mc.ReportRequest):
 
 @app.api_route("/suggest_questions/",methods=["GET"],response_model=mc.questionsResponse)  
 async def suggest_questions():
-  quest_string = get_questions("","")
-  questions_list = quest_string.split(" + ")
-
+  quest_string = base_model()
+  # questions_list = quest_string.split(" + ")
+  print(quest_string)
   return  mc.questionsResponse(
     message="questions generated sucessfully",
     status=200,
-    data=questions_list
+    data=['done']
   )
       
 # @app.api_route("/generate_report/", methods=["GET", "POST"], response_model=mc.ReportResponse)

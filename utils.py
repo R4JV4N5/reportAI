@@ -1,4 +1,4 @@
-from gen_report import create_report_template
+# from gen_report import create_report_template
 import json
 import sqlparse
 from groq import Groq
@@ -26,49 +26,32 @@ with open('prompts/base_prompt.txt', 'r') as file:
   base_prompt = file.read()
 
 client = Groq(api_key=groq_api_key)
-
-
-def base_model(ast_prompt,prompt):
-  chat_completion = client.chat.completions.create(
-  messages=[
-        {
-            "role": "assistant",
-            "content": f"{ast_prompt} ",
-        },
-        {
-            "role": "user",
-            "content": f""" {prompt} """,
-        }
-    ],
-    model=MODEL_NAME,
-    stream=False,)
-
-  return chat_completion.choices[0].message.content
   
-def get_questions(start_date, end_date):
-    
+def get_questions(start_date, end_date ,qlist):
+ 
+  user_question = '\n'.join(qlist)
+  if len(start_date) >0 and len(end_date) > 0:
+    date_string = "where payment dates are between {start_date} and {end_date}".format(start_date=start_date,end_date=end_date)
+  else:
+    date_string = ""
   chat_completion = client.chat.completions.create(
   messages=[
         {
             "role": "user",
-            "content": """Based on the db information Generate questions and sqlite3 queries based on the provided table columns information for report generation where payment dates are between {start_date} and {end_date}: {db_columns_info}.
+            "content": """Based on the db information Generate questions and sqlite3 queries based on the provided table columns information for report generation {date_string} : {db_columns_info}.
             
-            Strict rules for questions :
-          question 1 based on Overall Payment Performance
-          question 2 based on Payment Trends Across Batches and Courses
-          question 3 based on Comparison of Payment Modes
-          question 4 based on Installment Payment Analysis
-          question 5 based on Revenue Projections Based on Payment Trends
-          question 6 based on Semester-Wise Payment Overview
-          question 7 based on Conclusion and Future Outlook
-             
-             number of questions : 7
+
+            generate questions and queries for the following topic : {user_question},
+            user proper date formats suitable for queries 
+            Avoid generating similar questions and provide appropriate report section titles .
              strict output format :  [{{"title:<>,question_number:<> , question:<> , sql_query: <>}}] 
              Use Where only when necessary. avoid using assumed values in where conditions
-             Ensure that the questions are based on the provided table columns information and Queries are valid for SQLite3
+             Ensure that the questions are based on the provided table columns information and Queries are valid for SQLite3 and are suitable for report generation
+             
+             
              
              Queries is must for every question
-             """.format(db_columns_info = prd.db_columns_info,start_date=start_date,end_date=end_date)
+             """.format(db_columns_info = prd.db_columns_info,date_string= date_string,user_question=user_question)
         },
         {
             "role": "assistant",
@@ -101,7 +84,8 @@ def chat_with_groq(client, prompt, model, response_format):
 def execute_sql_query(query):
   
   
-    df = pd.read_csv('data/jain_university_data.csv')
+    # df = pd.read_csv('data/jain_university_data.csv')
+    df = pd.read_csv('data/university_payment_data.csv')
 
     # Connect to an SQLite database (in-memory or file-based)
       # Use ':memory:' for an in-memory database or provide a filename   
@@ -182,16 +166,34 @@ def get_answer(question_json):
           return "no query found"# print(result_json['error'])
 
 
-def gen_report(report_summary):
-  
-  report_contents = []
-  for i in prd.prompt_list:
-    contents_output = base_model(prd.ast_report_prompt, f"{i.format(report_summary=report_summary)} in 40 words.Generate without any introductory phrases or contextual framing such as 'Here is an analysis of the overall financial performance.It must be stakeholders friendly. it should not include special symbols like * .Generate a concise and accurate response")
-    report_contents.append(contents_output)
-    
-  if len(report_contents) == 7:
-    create_report_template(report_contents)
-    return True 
-  else:
-    return False     
+def base_model():
+  chat_completion = client.chat.completions.create(
+  messages=[
+        {
+            "role": "user",
+            "content": """Based on the db information Generate questions based on the provided table columns information for report generation : {db_columns_info}.
+            
+            use proper dates for questions 
+            Avoid generating similar questions.
+            Number of questions : 15
+             strict output format :  [{{"question_number:<> , question:<> }}] 
+             
+             examples of questions:
+             What is the total revenue collected for each course?
+             How is the revenue distributed across different batches?
+             What is the payment mode distribution for all transactions?
+             
+             Use Where only when necessary. avoid using assumed values in where conditions
+             Ensure that the questions are based on the provided table columns information and are suitable for report generation
+             
+             """.format(db_columns_info = prd.db_columns_info)
+        },
+        {
+            "role": "assistant",
+            "content": "```json"
+        }
+    ],
+  stop="```",
+    model='llama3-70b-8192')
 
+  return chat_completion.choices[0].message.content
