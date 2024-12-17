@@ -1,14 +1,10 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, Depends
 import os
-import prompt_data as prd
 import modelclass as mc
 from fastapi.middleware.cors import CORSMiddleware
-import base64
-import re
 import json
-
 from utils import get_questions,get_answer,base_model
-
+from db import get_db
 
 
 app = FastAPI()
@@ -20,8 +16,6 @@ app.add_middleware(
     allow_methods=["*"],  # Allow all HTTP methods (GET, POST, etc.)
     allow_headers=["*"],  # Allow all headers
 )
-
-
 
 
 
@@ -88,12 +82,57 @@ async def suggest_questions():
     status=200,
     data=question_list
   )
-      
-# @app.api_route("/generate_report/", methods=["GET", "POST"], response_model=mc.ReportResponse)
-# async def generate_report(request: mc.ReportRequest):
-  # print(request)
-  # return {
-  #                   "message": "questions generated successfully",
-  #                   "status": "success",
-  #                   "data": {"base_string": f"{request.end_date}"}
-  #               }
+  
+  # endpoints for user auth
+  
+  
+# user auth
+
+from auth import authenticate_user,sessions,create_session,pwd_context
+from sqlalchemy.orm import Session
+from fastapi import FastAPI, Depends, HTTPException, Request
+from sqlalchemy.orm import Session
+from fastapi.responses import JSONResponse
+from modelclass import UserDB,UserCreate,UserLoginModel
+
+
+
+@app.post("/login")
+async def login(user:UserLoginModel, db: Session = Depends(get_db)):
+    user_obj = authenticate_user(db, user.identifier,user.password)
+    if not user_obj:
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    session_id = create_session(user_obj)
+    response = JSONResponse({"message": "Login successful"})
+    response.set_cookie(key="session_id", value=session_id, httponly=True)
+    return response
+
+@app.post("/logout")
+async def logout(request: Request):
+    session_id = request.cookies.get("session_id")
+    if session_id in sessions:
+        del sessions[session_id]
+        response = JSONResponse({"message": "Logged out successfully"})
+        response.delete_cookie("session_id")
+        return response
+    raise HTTPException(status_code=401, detail="Invalid session or already logged out")
+
+
+@app.post("/signup")
+async def signup(user: UserCreate, db: Session = Depends(get_db)):
+    # Check if the user already exists
+    existing_user = db.query(UserDB).filter(
+        (UserDB.Username == user.username) | (UserDB.Email == user.email)
+    ).first()
+    if existing_user:
+        raise HTTPException(status_code=400, detail="User with the same username or email already exists")
+    
+    # Hash the password
+    hashed_password = pwd_context.hash(user.password)
+    
+    # Create a new user
+    new_user = UserDB(Username=user.username, Email=user.email, Password=hashed_password)
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+    return {"message": "User registered successfully", "UserID": new_user.UserID}

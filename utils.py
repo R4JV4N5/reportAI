@@ -70,13 +70,15 @@ def get_questions(start_date, end_date ,qlist):
 def chat_with_groq(client, prompt, model, response_format):
   completion = client.chat.completions.create(
   model=model,
+  max_tokens=1024,
   messages=[
       {
           "role": "user",
           "content": prompt
       }
   ],
-  response_format=response_format
+  response_format=response_format,
+  
   )
 
   return completion.choices[0].message.content
@@ -173,6 +175,7 @@ def base_model():
         }
     ],
   stop="```",
+  max_tokens=1024,
     model='llama3-70b-8192')
 
   return chat_completion.choices[0].message.content
