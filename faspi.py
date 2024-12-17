@@ -1,10 +1,15 @@
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI, HTTPException, Depends, Request
 import os
 import modelclass as mc
 from fastapi.middleware.cors import CORSMiddleware
 import json
 from utils import get_questions,get_answer,base_model
 from db import get_db
+
+from auth import authenticate_user,sessions,create_session,pwd_context
+from sqlalchemy.orm import Session
+from fastapi.responses import JSONResponse
+from modelclass import UserDB,ReportDB,UserCreate,UserLoginModel,UserIDRequest
 
 
 app = FastAPI()
@@ -68,9 +73,7 @@ async def generate_report(request: mc.ReportRequest):
                 # data={"base_string": pdf_data}
                 data= "")
           
-        
-      
-
+  
 @app.api_route("/suggest_questions/",methods=["GET"],response_model=mc.questionsResponse)  
 async def suggest_questions():
   quest_string = base_model()
@@ -85,17 +88,72 @@ async def suggest_questions():
   
   # endpoints for user auth
   
+@app.api_route("/save_report/", methods=["GET"])
+async def save_report(request: mc.saveReportRequest, db: Session = Depends(get_db)):
+    try:
+        if request:
+            new_report = ReportDB(
+                UserId=request.UserID,
+                Title=request.Title,
+                Description=request.Description,
+                report_data=request.ReportData
+            )
+            db.add(new_report)
+            db.commit()
+            db.refresh(new_report)
+            return {
+                "status": 200,
+                "isSucess": True,
+                "message": "Report saved successfully",
+            }
+    except Exception as e:
+        # Log the error (optional)
+        return {
+            "status": 500,
+            "isSucess": False,
+            "message": f"An error occurred: {str(e)}",
+        }
+
+
+@app.api_route("/get_reports/", methods=["GET"])
+async def get_reports(userID: UserIDRequest, db: Session = Depends(get_db)):
+    try:
+        # Query to get all reports for the given UserID
+        reports = db.query(ReportDB).filter(ReportDB.UserID == userID.userID).all()
+
+        # Check if reports exist
+        if reports:
+            # Format the response with the reports data
+            return {
+                "status": 200,
+                "isSuccess": True,
+                "message": "Reports retrieved successfully",
+                "data": [  # Convert report objects to dictionaries or your response model
+                    {
+                        "Title": report.Title,
+                        "Description": report.Description,
+                        "ReportData": report.report_data,
+                    }
+                    for report in reports
+                ],
+            }
+        else:
+            return {
+                "status": 404,
+                "isSuccess": False,
+                "message": "No reports found for the given UserID",
+            }
+    except Exception as e:
+        # Handle unexpected errors
+        return {
+            "status": 500,
+            "isSuccess": False,
+            "message": f"An error occurred: {str(e)}",
+        }
+
+
   
 # user auth
-
-from auth import authenticate_user,sessions,create_session,pwd_context
-from sqlalchemy.orm import Session
-from fastapi import FastAPI, Depends, HTTPException, Request
-from sqlalchemy.orm import Session
-from fastapi.responses import JSONResponse
-from modelclass import UserDB,UserCreate,UserLoginModel
-
-
 
 @app.post("/login")
 async def login(user:UserLoginModel, db: Session = Depends(get_db)):
@@ -103,16 +161,20 @@ async def login(user:UserLoginModel, db: Session = Depends(get_db)):
     if not user_obj:
         raise HTTPException(status_code=401, detail="Invalid credentials")
     session_id = create_session(user_obj)
-    response = JSONResponse({"message": "Login successful"})
+    existing_user = db.query(UserDB).filter((UserDB.Username == user.identifier) | (UserDB.Email == user.identifier)).first()
+    if existing_user:
+      userId = existing_user.UserID
+    response = JSONResponse({"status": 200,"isSucess":True,"message": "Login successful","UserId":userId})
     response.set_cookie(key="session_id", value=session_id, httponly=True)
     return response
+
 
 @app.post("/logout")
 async def logout(request: Request):
     session_id = request.cookies.get("session_id")
     if session_id in sessions:
         del sessions[session_id]
-        response = JSONResponse({"message": "Logged out successfully"})
+        response = JSONResponse({"status": 200,"isSucess":True,"message": "Logged out successfully"})
         response.delete_cookie("session_id")
         return response
     raise HTTPException(status_code=401, detail="Invalid session or already logged out")
@@ -135,4 +197,6 @@ async def signup(user: UserCreate, db: Session = Depends(get_db)):
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
-    return {"message": "User registered successfully", "UserID": new_user.UserID}
+    return {"status": 200,"isSucess":True,"message": "User registered successfully",}
+
+
