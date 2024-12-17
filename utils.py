@@ -2,11 +2,9 @@
 import json
 import sqlparse
 from groq import Groq
-import sqlite3
 import pandas as pd
 import os
 import prompt_data as prd
-import re
 from db import engine
 
 

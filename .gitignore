@@ -2,5 +2,4 @@ venv
 files
 database
 .env
-
-db.py
+db
