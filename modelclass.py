@@ -27,7 +27,9 @@ class saveReportRequest(BaseModel):
     Description:str
     ReportData: str
     
-    
+
+class LogoutRequestModel(BaseModel):
+    SessionId:str   
 
     
 # user models    

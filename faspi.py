@@ -9,7 +9,7 @@ from db import get_db
 from auth import authenticate_user,sessions,create_session,pwd_context
 from sqlalchemy.orm import Session
 from fastapi.responses import JSONResponse
-from modelclass import UserDB,ReportDB,UserCreate,UserLoginModel,UserIDRequest
+from modelclass import UserDB,ReportDB,UserCreate,UserLoginModel,UserIDRequest,LogoutRequestModel
 
 
 app = FastAPI()
@@ -164,14 +164,16 @@ async def login(user:UserLoginModel, db: Session = Depends(get_db)):
     existing_user = db.query(UserDB).filter((UserDB.Username == user.identifier) | (UserDB.Email == user.identifier)).first()
     if existing_user:
       userId = existing_user.UserID
-    response = JSONResponse({"status": 200,"isSucess":True,"message": "Login successful","UserId":userId})
+    response = JSONResponse({"status": 200,"isSucess":True,"message": "Login successful","UserId":userId ,"SessionId":session_id})
     response.set_cookie(key="session_id", value=session_id, httponly=True)
     return response
 
 
 @app.post("/logout")
-async def logout(request: Request):
-    session_id = request.cookies.get("session_id")
+async def logout(request:LogoutRequestModel):
+    print(request)
+    print(sessions)
+    session_id = request.SessionId
     if session_id in sessions:
         del sessions[session_id]
         response = JSONResponse({"status": 200,"isSucess":True,"message": "Logged out successfully"})
