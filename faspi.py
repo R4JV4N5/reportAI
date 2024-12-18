@@ -88,7 +88,7 @@ async def suggest_questions():
   
   # endpoints for user auth
   
-@app.api_route("/save_report/", methods=["GET"])
+@app.api_route("/save_report/", methods=["POST"])
 async def save_report(request: mc.saveReportRequest, db: Session = Depends(get_db)):
     try:
         if request:

@@ -40,9 +40,10 @@ def get_questions(start_date, end_date ,qlist):
             
 
             generate questions and queries for the following topic : {user_question},
-            user proper date formats suitable for queries 
+            use proper date formats suitable for queries 
+            Based on the queries suggest suitable visualizations from these: [bar, line, pie, scatter, histogram, boxplot, heatmap, bubble, treemap, area]
             Avoid generating similar questions and provide appropriate report section titles .
-             strict output format :  [{{"title:<>,question_number:<> , question:<> , sql_query: <>}}] 
+             strict output format :  [{{"title:<>,question_number:<> , question:<> , sql_query: <>,suitable_visualization:<>}}] 
              Use Where only when necessary. avoid using assumed values in where conditions
              Ensure that the questions are based on the provided table columns information and Queries are valid for SQLite3 and are suitable for report generation
              
