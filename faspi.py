@@ -23,6 +23,7 @@ app.add_middleware(
 )
 
 
+print(sessions)
 
 @app.api_route("/generate_report/", methods=["POST"], response_model=mc.ReportResponse)
 async def generate_report(request: mc.ReportRequest):
@@ -115,34 +116,37 @@ async def save_report(request: mc.saveReportRequest, db: Session = Depends(get_d
         }
 
 
-@app.api_route("/get_reports/", methods=["GET"])
-async def get_reports(userID: UserIDRequest, db: Session = Depends(get_db)):
+@app.api_route("/get_reports", methods=["POST"])
+async def get_reports(user: UserIDRequest, db: Session = Depends(get_db)):
+    print(user.UserID)
     try:
         # Query to get all reports for the given UserID
-        reports = db.query(ReportDB).filter(ReportDB.UserID == userID.userID).all()
+        if user:
+            
+            reports = db.query(ReportDB).filter(ReportDB.UserID == user.UserID).all()
 
         # Check if reports exist
-        if reports:
-            # Format the response with the reports data
-            return {
-                "status": 200,
-                "isSuccess": True,
-                "message": "Reports retrieved successfully",
-                "data": [  # Convert report objects to dictionaries or your response model
-                    {   "ReportID":report.ID,
-                        "Title": report.Title,
-                        "Description": report.Description,
-                        "ReportData": report.report_data,
-                    }
-                    for report in reports
-                ],
-            }
-        else:
-            return {
-                "status": 404,
-                "isSuccess": False,
-                "message": "No reports found for the given UserID",
-            }
+            if reports:
+                # Format the response with the reports data
+                return {
+                    "status": 200,
+                    "isSuccess": True,
+                    "message": "Reports retrieved successfully",
+                    "data": [  # Convert report objects to dictionaries or your response model
+                        {   "ReportID":report.ID,
+                            "Title": report.Title,
+                            "Description": report.Description,
+                            "ReportData": report.Report_data,
+                        }
+                        for report in reports
+                    ],
+                }
+            else:
+                return {
+                    "status": 404,
+                    "isSuccess": False,
+                    "message": "No reports found for the given UserID",
+                }
     except Exception as e:
         # Handle unexpected errors
         return {

@@ -19,7 +19,7 @@ class questionsResponse(BaseModel):
  
 #  report model
 class UserIDRequest(BaseModel):
-    userID: int
+    UserID: int
     
 class saveReportRequest(BaseModel):
     UserID: int
