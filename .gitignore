@@ -3,3 +3,4 @@ files
 database
 .env
 db
+data/test.py
