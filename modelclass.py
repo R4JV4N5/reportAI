@@ -63,4 +63,4 @@ class ReportDB(Base):
     UserID = Column(Integer, primary_key=True, index=True)
     Title = Column(String(50), unique=True, nullable=False)
     Description = Column(String(100), unique=True, nullable=False)
-    Report_data = Column(LargeBinary, nullable=False)
+    Report_data = Column(String, nullable=False)

@@ -93,10 +93,10 @@ async def save_report(request: mc.saveReportRequest, db: Session = Depends(get_d
     try:
         if request:
             new_report = ReportDB(
-                UserId=request.UserID,
+                UserID=request.UserID,
                 Title=request.Title,
                 Description=request.Description,
-                report_data=request.ReportData
+                Report_data=request.ReportData
             )
             db.add(new_report)
             db.commit()
