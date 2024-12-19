@@ -129,7 +129,7 @@ async def get_reports(userID: UserIDRequest, db: Session = Depends(get_db)):
                 "isSuccess": True,
                 "message": "Reports retrieved successfully",
                 "data": [  # Convert report objects to dictionaries or your response model
-                    {
+                    {   "ReportID":report.ID,
                         "Title": report.Title,
                         "Description": report.Description,
                         "ReportData": report.report_data,
@@ -166,6 +166,7 @@ async def login(user:UserLoginModel, db: Session = Depends(get_db)):
       userId = existing_user.UserID
     response = JSONResponse({"status": 200,"isSucess":True,"message": "Login successful","UserId":userId})
     response.set_cookie(key="session_id", value=session_id, httponly=True)
+    print(response)
     return response
 
 
