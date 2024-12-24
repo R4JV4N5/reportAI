@@ -1,5 +1,11 @@
-FROM python:3.14.0a3-slim
+FROM python:3.12-slim
 
 WORKDIR /reportai
 
-COPY requirements.txt requirements.txt
+
+RUN pip install sqlalchemy passlib passlib[bcrypt] fastapi[all] groq pandas pydantic sqlparse uvicorn mysql-connector-python python-dotenv
+
+COPY . .
+EXPOSE 8000
+
+CMD ["uvicorn", "faspi:app", "--reload"]

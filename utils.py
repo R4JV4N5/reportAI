@@ -19,10 +19,6 @@ MODEL_NAME = "llama3-70b-8192"
 groq_api_key = os.getenv('groq_api_key')
 
 
-
-with open('prompts/base_prompt.txt', 'r') as file:
-  base_prompt = file.read()
-
 client = Groq(api_key=groq_api_key)
   
 def get_questions(start_date, end_date ,qlist):
