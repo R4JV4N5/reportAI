@@ -1,0 +1,5 @@
+FROM python:3.14.0a3-slim
+
+WORKDIR /reportai
+
+COPY requirements.txt requirements.txt
