@@ -8,4 +8,4 @@ RUN pip install sqlalchemy passlib passlib[bcrypt] fastapi[all] groq pandas pyda
 COPY . .
 EXPOSE 8000
 
-CMD ["uvicorn", "faspi:app", "--reload"]
+CMD ["uvicorn", "faspi:app", "--host", "0.0.0.0", "--reload"]
