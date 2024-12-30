@@ -13,7 +13,7 @@ load_dotenv()
 
 
 
-MODEL_NAME = "llama3-70b-8192"
+MODEL_NAME = "llama-3.3-70b-versatile"
 
 # Get the Groq API key and create a Groq client
 groq_api_key = os.getenv('groq_api_key')
@@ -32,7 +32,7 @@ def get_questions(start_date, end_date ,qlist):
   messages=[
         {
             "role": "user",
-            "content": """Based on the db information Generate questions and sqlite3 queries based on the provided table columns information for report generation {date_string} : {db_columns_info}.
+            "content": """Based on the db information Generate questions and strict Mysql queries based on the provided table columns information for report generation {date_string} : {db_columns_info}.
             
 
             generate questions and queries for the following topic : {user_question},
@@ -43,7 +43,7 @@ def get_questions(start_date, end_date ,qlist):
              Use Where only when necessary. avoid using assumed values in where conditions
              Ensure that the questions are based on the provided table columns information and Queries are valid for SQLite3 and are suitable for report generation
              
-             
+             dont use strftime
              
              Queries is must for every question
              """.format(db_columns_info = prd.db_columns_info,date_string= date_string,user_question=user_question)
@@ -54,7 +54,7 @@ def get_questions(start_date, end_date ,qlist):
         }
     ],
   stop="```",
-    model='llama3-70b-8192')
+    model='llama-3.3-70b-versatile')
   print("genertating questions")
   op = chat_completion.choices[0].message.content
   # if 'question_number:' in op and 'question:' in op and 'sql_query:' in op:
@@ -110,7 +110,12 @@ def get_summarization(client, user_question, df, model):
       {df}
 
     In a few sentences, summarize the data in the table as it pertains to the original user question. Avoid qualifiers like "based on the data" and do not comment on the structure or metadata of the table itself in 50 words.
-    Avoid using special Characters . Use units in amounts like 12000 rupees or 10 cr or 1 lakhs
+    Avoid using special Characters .
+    convert large amounts into Indian numbering system like 
+    Example:
+      Twenty Nine Lakhs Seventy One Thousand -> 29 lakhs 71 thousand
+      
+    .
   '''.format(user_question = user_question, df = df)
     print("genertating sql summary")
 
@@ -171,6 +176,6 @@ def base_model():
     ],
   stop="```",
   max_tokens=1024,
-    model='llama3-70b-8192')
+    model='llama-3.3-70b-versatile')
 
   return chat_completion.choices[0].message.content
